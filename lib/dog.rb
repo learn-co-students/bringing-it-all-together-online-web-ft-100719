@@ -1,21 +1,22 @@
+require 'pry'
 class Dog
 
     attr_accessor :name, :breed, :id
 
-    def initialize(hash, id=nil)
+    def initialize(hash, id: nil)
       @id=hash[:id]
       @name=hash[:name]
       @breed=hash[:breed]
     end
 
     def self.create_table
-        sql = <<-SQL 
-        CREATE TABLE dogs( 
+        sql = 
+        "CREATE TABLE dogs( 
             id INTEGER PRIMARY KEY,
             name TEXT,
             breed TEXT
-        )
-        SQL
+        )"
+        
         DB[:conn].execute(sql)
     end 
 
@@ -52,29 +53,28 @@ class Dog
         sql = <<-SQL
         SELECT * FROM dogs WHERE id = ?
         SQL
-        dog = DB[:conn].execute(sql, id)[0]
+        dog = DB[:conn].execute(sql, id).flatten
         dog_hash = {id:dog[0], name:dog[1], breed:dog[2]}
         new_dog=Dog.new(dog_hash)
         new_dog
     end 
 
     def self.find_or_create_by(name:, breed:)
-        row=DB[:conn].execute("SELECT * FROM dogs WHERE name =? AND breed = ?", name, breed)
+        row=DB[:conn].execute("SELECT * FROM dogs WHERE name =? AND breed = ?", name, breed).flatten
     
         if !row.empty?
-          dog_d=row[0]
-          dog_hash={id:dog_d[0], name:dog_d[1], breed:dog_d[2]}
+          dog_hash={id:row[0], name:row[1], breed:row[2]}
           dog=Dog.new(dog_hash)
         else
           dog=self.create(name:name, breed:breed)
         end
-      dog
+        dog
     
       end
     
       def self.find_by_name(name)
         sql= "SELECT * FROM dogs WHERE name = ?"
-        dog= DB[:conn].execute(sql,name)[0]
+        dog= DB[:conn].execute(sql,name).flatten
         dog_hash={id:dog[0], name:dog[1], breed:dog[2]}
         new_dog=Dog.new(dog_hash)
         new_dog
